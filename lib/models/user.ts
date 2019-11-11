@@ -1,29 +1,58 @@
 import * as mongoose from 'mongoose';
 import { Schema, Document } from 'mongoose';
 import * as uniqueValidator from 'mongoose-unique-validator';
+import { prop, Typegoose, plugin } from 'typegoose';
 
-export interface IUser extends Document {
+export interface IUserModel {
     id: number;
-    userName?: string;
-    password?: string;
+    userName: string;
+    password: string;
 }
 
-const UserSchema: Schema = new Schema({
-    id: {
-        type: mongoose.Types.ObjectId,
-        index: true,
-    },
-    userName: {
-        type: String,
-        required: true,
-        index: true,
-    },
-    password: {
-        type: String,
-        required: true,
-    },
-});
+export interface Credentials {
+    userName: string;
+    password: string;
+}
 
-UserSchema.plugin(uniqueValidator);
+@plugin(uniqueValidator)
+class UserModel extends Typegoose implements IUserModel {
+    @prop({ index: true })
+    public id: number;
 
-export default mongoose.model<IUser>('User', UserSchema);
+    @prop({
+        required: true,
+        unique: true,
+    })
+    public userName!: string;
+
+    @prop({ required: true })
+    public password!: string;
+}
+
+export default new UserModel().getModelForClass(UserModel);
+
+// export interface IUser extends Document {
+//     id: number;
+//     userName?: string;
+//     password?: string;
+// }
+
+// const UserSchema: Schema = new Schema({
+//     id: {
+//         type: mongoose.Types.ObjectId,
+//         index: true,
+//     },
+//     userName: {
+//         type: String,
+//         required: true,
+//         unique: true,
+//     },
+//     password: {
+//         type: String,
+//         required: true,
+//     },
+// });
+
+// UserSchema.plugin(uniqueValidator);
+
+// export default mongoose.model<IUser>('User', UserSchema);

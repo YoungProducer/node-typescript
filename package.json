@@ -13,13 +13,16 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
     "@types/body-parser": "^1.17.1",
     "@types/chai": "^4.2.4",
     "@types/chai-http": "^4.2.0",
     "@types/cookie-parser": "^1.4.2",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.2",
+    "@types/http-errors": "^1.6.2",
     "@types/jest": "^24.0.22",
+    "@types/lodash": "^4.14.146",
     "@types/mocha": "^5.2.7",
     "@types/mongoose": "^5.5.30",
     "@types/mongoose-unique-validator": "^1.0.3",
@@ -42,15 +45,19 @@
     "tslint": "^5.20.1",
     "tslint-config-airbnb": "^5.11.2",
     "tslint-loader": "^3.5.4",
-    "typescript": "^2.5.3",
+    "typescript": "^3.6.3",
     "webpack": "^3.8.1"
   },
   "dependencies": {
     "@typegoose/typegoose": "^6.1.1",
     "@types/superagent": "^4.1.4",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.4",
     "express": "^4.17.1",
+    "http-errors": "^1.7.3",
+    "isemail": "^3.2.0",
+    "lodash": "^4.17.15",
     "mongoose": "^5.7.9",
     "mongoose-unique-validator": "^2.0.3",
     "reflect-metadata": "^0.1.13",
@@ -64,6 +71,9 @@
     "testURL": "http://localhost",
     "transform": {
       "^.+\\.(ts)?$": "ts-jest"
-    }
+    },
+    "setupFilesAfterEnv": [
+      "./configs/jestSetup.ts"
+    ]
   }
 }

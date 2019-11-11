@@ -7,6 +7,7 @@
         "quotemark": false,
         "no-duplicate-imports": false,
         "ter-arrow-parens": false,
-        "variable-name": false
+        "variable-name": false,
+        "prefer-const": false
     }
 }

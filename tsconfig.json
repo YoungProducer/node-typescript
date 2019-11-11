@@ -16,6 +16,7 @@
     ],
     "include": [
       "./lib/**/*.ts",
-      "./lib/**/*.test.ts"
+      "./lib/**/*.test.ts",
+      "./config/**/*.ts"
     ]
   }
