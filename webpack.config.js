@@ -20,11 +20,6 @@ module.exports = {
                 use: 'tslint-loader',
             },
             {
-                test: /\test.ts$/,
-                exclude: /node_modules/,
-                use: 'ts-loader',
-            },
-            {
                 use: 'ts-loader',
                 test: /\.ts$/,
                 exclude: /node_modules/

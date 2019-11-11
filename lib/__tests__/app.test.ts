@@ -19,16 +19,10 @@ describe('GET /auth', () => {
     });
 
     it('GET /signin', async done => {
-        // await request(app.default)
-        //     .get('/auth/signin')
-        //     .expect(200)
-        //     .then(res => {
-        //         expect(res.body).to.have.property('hash');
-        //     });
-        // done.close();
+        // Get response from /auth/signin
         const response = await request.get('/auth/signin');
+        // Chech property
         expect(response.body).to.have.property('hash');
         done();
-        server.close();
     });
 });
