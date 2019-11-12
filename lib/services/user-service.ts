@@ -28,7 +28,7 @@ export default class DefaultUserService implements UserService {
             throw new HttpError.Unauthorized(USER_SERVICE.INVALIDE_CREDENTIALS_ERROR);
         }
 
-        const passwordMatched = this.bcryptHasher.comparePassword(password, foundUser.password);
+        const passwordMatched = await this.bcryptHasher.comparePassword(password, foundUser.password);
 
         if (!passwordMatched) {
             throw new HttpError.Unauthorized(USER_SERVICE.INVALIDE_CREDENTIALS_ERROR);

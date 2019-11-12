@@ -1,40 +1,43 @@
 import * as express from 'express';
+import { Request, Response, NextFunction } from 'express';
 import * as dotenv from 'dotenv';
 import * as bodyParser from 'body-parser';
-import * as mongoose from 'mongoose';
-import { prop, Typegoose, ModelType, InstanceType } from 'typegoose';
+import * as methodOverride from 'method-override';
+import * as cors from 'cors';
+import { HttpError } from 'http-errors';
 
 // Custom imports
+import { handleError } from './utils/errorHandler';
 import mainRouter from './routes';
 import { DataBaseController } from './utils/dataBaseController';
-import UserController from './models/user';
 
 const app: express.Application = express();
 const { PORT = 8080 } = process.env;
 
 dotenv.config();
-
-// DataBaseController.connect();
-
-// const dataBase: mongoose.Connection = mongoose.connection;
-// dataBase.on('error', console.error.bind(console, 'connection error:'));
-// dataBase.once('open', () => {
-//     console.log('connected');
-// });
-
-// (async () => {
-//     const u = await UserModel.create({ userName: "heep", password: "hello" });
-// })();
-// const user = new UserController({ userName: 'heep', password: 'as' });
-// user.save((err, user) => {
-//     if (err) return console.error(err);
-// });
+const corsOptions = {
+    origin: '*',
+    methods: ["POST"],
+    credentials: true,
+    maxAge: 3600,
+};
 
 app.set('port', PORT);
+app.use(express.json());
+app.use(methodOverride());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/', mainRouter);
+app.use((
+    err: HttpError,
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    handleError(err, res);
+});
 
 if (require.main === module) {
     DataBaseController.connect('users');
