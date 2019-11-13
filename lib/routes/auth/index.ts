@@ -19,7 +19,7 @@ import BcryptHasher, { PasswordHasher } from '../../services/bcrypt-password-ser
 import DefaultUserService, { UserService } from '../../services/user-service';
 import { JWTService } from '../../services/jwt-service';
 import { validateCredentials } from '../../services/validator';
-import { JwtAuthStrategy } from '../../authentication-strategies/jwt-auth-strategy';
+import { JWTMiddleware } from '../../middleware/jwt-middleware';
 
 // Import types
 import { TokenService, UserProfile } from '../../types/auth';
@@ -97,10 +97,10 @@ const routes = (
     ),
     router.all(
         '/protected',
-        JwtAuthStrategy,
+        JWTMiddleware,
         restfull({
             get: async (req: Request, res: Response, next: NextFunction) => {
-                return res.send('Good');
+                return res.send('Validated');
             },
         }),
     )

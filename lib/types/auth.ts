@@ -1,3 +1,5 @@
+import { Request, NextFunction } from 'express';
+
 export declare const securityId: unique symbol;
 
 export interface Principal {
@@ -13,4 +15,9 @@ export interface UserProfile extends Principal {
 export interface TokenService {
     verifyToken(token: string): Promise<UserProfile>;
     generateToken(userProfile: UserProfile): Promise<string>;
+}
+
+export interface AuthStrategy {
+    authenticate(request: Request): Promise<UserProfile>;
+    extractCredentials(request: Request): string;
 }
