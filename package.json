@@ -53,11 +53,13 @@
   "dependencies": {
     "@typegoose/typegoose": "^6.1.1",
     "@types/cors": "^2.8.6",
+    "@types/csurf": "^1.9.36",
     "@types/superagent": "^4.1.4",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.4",
     "cors": "^2.8.5",
+    "csurf": "^1.10.0",
     "express": "^4.17.1",
     "http-errors": "^1.7.3",
     "isemail": "^3.2.0",

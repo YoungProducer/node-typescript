@@ -98,12 +98,25 @@ const routes = (
     router.all(
         '/protected',
         JWTMiddleware,
+        // csrfProtection,
         restfull({
             get: async (req: Request, res: Response, next: NextFunction) => {
-                return res.send('Validated');
+                return res.send(req.csrfToken());
             },
         }),
     )
+    // router.post(
+    //     '/auth/protected',
+    //     csrfProtection,
+    //     JWTMiddleware,
+    //     async (
+    //         req: Request,
+    //         res: Response,
+    //         next: NextFunction,
+    //     ) => {
+    //         return res.send(req.csrfToken());
+    //     },
+    // )
 );
 
 export default routes();
