@@ -15,6 +15,7 @@ import
         IUserModel,
         Credentials,
     } from '../../models/user';
+import RefreshTokenController from "../../models/active-refresh-token";
 import BcryptHasher, { PasswordHasher } from '../../services/bcrypt-password-service';
 import DefaultUserService, { UserService } from '../../services/user-service';
 import { JWTService } from '../../services/jwt-service';
@@ -46,11 +47,17 @@ const routes = (
 
                     const userProfile: UserProfile = userService.convertToUserProfile(user);
 
-                    const token = await tokenService.generateToken(userProfile);
+                    const token = await tokenService.generateAccessToken(userProfile);
+                    const refreshToken = await tokenService.generateRefreshToken(userProfile);
 
-                    return res.send({
-                        accessToken: token,
-                    });
+                    const expirationDate = new Date();
+                    expirationDate.setMinutes(expirationDate.getMinutes() + 15);
+
+                    return res.cookie('accessToken', `Bearer ${token}`, {
+                        httpOnly: true,
+                        // secure: true // Uncomment in production mode
+                        expires: expirationDate,
+                    }).send({}).end();
                 } catch (error) {
                     next(error);
                 }
@@ -97,11 +104,47 @@ const routes = (
     ),
     router.all(
         '/protected',
-        JWTMiddleware,
+        // JWTMiddleware,
         // csrfProtection,
         restfull({
+            post: async (req: Request, res: Response, next: NextFunction) => {
+                const user = await UserController.findById('5dd19d5b7c034c1bb8123eff');
+                user.save(async err => {
+                    const refreshToken = await RefreshTokenController.create({
+                        userId: '5dd19d5b7c034c1bb8123eff',
+                        token: '1231da32131',
+                        tokenId: '131d-21313213112',
+                    });
+
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    refreshToken.save(err => {
+                        if (err) {
+                            console.log(err);
+                        }
+                    });
+                });
+
+                return res.send('ok');
+            },
+        }),
+    ),
+    router.all(
+        '/tokens',
+        restfull({
             get: async (req: Request, res: Response, next: NextFunction) => {
-                return res.send(req.csrfToken());
+                let atokens;
+                await UserController.findById('5dd19d5b7c034c1bb8123eff')
+                    .populate('refreshTokens')
+                    .exec((err, tokens) => {
+                        if (err) {
+                            console.log(err);
+                        }
+                        atokens = tokens;
+                    });
+                res.send(atokens).end();
             },
         }),
     )

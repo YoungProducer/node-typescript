@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-
 export namespace DataBaseController {
     export const connect = async (db_name: string) => {
         try {

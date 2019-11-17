@@ -43,8 +43,13 @@ export interface Credentials {
 
 const UserSchema: Schema = new Schema({
     id: {
-        type: mongoose.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         index: true,
+    },
+    userId: {
+        type: Number,
+        auto: true,
+        unique: true,
     },
     email: {
         type: String,
@@ -60,6 +65,9 @@ const UserSchema: Schema = new Schema({
         type: String,
         required: true,
     },
+    refreshTokens: [
+        { type: Schema.Types.ObjectId, ref: 'RefreshToken' },
+    ],
 });
 
 UserSchema.plugin(uniqueValidator);

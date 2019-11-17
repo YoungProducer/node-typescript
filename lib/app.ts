@@ -5,6 +5,7 @@ import * as methodOverride from 'method-override';
 import * as cors from 'cors';
 import * as csrf from 'csurf';
 import * as cookieParser from 'cookie-parser';
+import * as helmet from 'helmet';
 import { Request, Response, NextFunction } from 'express';
 import { HttpError } from 'http-errors';
 
@@ -36,11 +37,20 @@ app.set('port', PORT);
 // Enable cookie parser
 app.use(cookieParser());
 
-app.all('/auth/signin', csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
-    res.cookie('CSRF-Token', req.csrfToken(), { httpOnly: true, domain: null });
-    res.send('ok');
-    next();
-});
+// Enable Helmet
+app.use(helmet({
+    xssFilter: true,
+    hidePoweredBy: true,
+    // contentSecurityPolicy: true,
+    ieNoOpen: true,
+    referrerPolicy: true,
+    permittedCrossDomainPolicies: true,
+    frameguard: true,
+}));
+
+// Enable body parser
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Include all routes
 app.use('/', mainRouter);
@@ -48,26 +58,11 @@ app.use('/', mainRouter);
 // Allows to override express methods
 app.use(methodOverride());
 
-// Enable body parser
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// app.use(csrf({ cookie: true }));
-
 // Enable express json parsing
 app.use(express.json());
 
 // Set up cors policy
 app.use(cors(corsOptions));
-
-app.get('/auth/protected', csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
-    res.cookie('CSRF-Token', req.csrfToken(), { httpOnly: true, domain: null });
-    res.send('ok');
-});
-
-app.post('/auth/protected', csrfProtection, async (req: Request, res: Response, next: NextFunction) => {
-    res.send('Ok');
-});
 
 // Enable custom error handler
 app.use((
@@ -76,7 +71,6 @@ app.use((
     res: Response,
     next: NextFunction,
 ) => {
-    console.log(req.cookies);
     console.log(err);
     handleError(err, res);
 });

@@ -10,11 +10,13 @@ export interface Principal {
 export interface UserProfile extends Principal {
     email?: string;
     name?: string;
+    hash?: string;
 }
 
 export interface TokenService {
     verifyToken(token: string): Promise<UserProfile>;
-    generateToken(userProfile: UserProfile): Promise<string>;
+    generateAccessToken(userProfile: UserProfile): Promise<string>;
+    generateRefreshToken(userProfile: UserProfile): Promise<string>;
 }
 
 export interface AuthStrategy {

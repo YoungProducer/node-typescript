@@ -23,11 +23,17 @@ export class JWTAuthStrategy implements AuthStrategy {
     }
 
     extractCredentials(request: Request): string {
-        if (!request.headers.authorization) {
-            throw new HttpErrors.Unauthorized(`Authorization header not found.`);
+        // if (!request.headers.authorization) {
+        //     throw new HttpErrors.Unauthorized(`Authorization header not found.`);
+        // }
+
+        // const authHeaderValue = request.headers.authorization;
+
+        if (!request.cookies['accessToken']) {
+            throw new HttpErrors.Unauthorized(`Authorization token not found`);
         }
 
-        const authHeaderValue = request.headers.authorization;
+        const authHeaderValue = request.cookies['accessToken'];
 
         if (!authHeaderValue.startsWith('Bearer')) {
             throw new HttpErrors.Unauthorized(
