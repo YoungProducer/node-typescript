@@ -1,9 +1,8 @@
-import * as express from 'express';
+import { Router } from 'express';
 
-// Custom imports
-import auth from './auth';
+import auth from './auth/index';
 
-const router: express.Router = express.Router();
+const router: Router = Router();
 
 router.use(auth);
 

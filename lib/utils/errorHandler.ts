@@ -10,5 +10,5 @@ export const handleError = (err: HttpError, res: Response) => {
         status: "error",
         statusCode: statusCode.toString(),
         message: message.toString(),
-    });
+    }).end();
 };

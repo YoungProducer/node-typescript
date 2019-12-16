@@ -1,49 +1,49 @@
-import * as HttpError from 'http-errors';
+import * as HttpErrors from 'http-errors';
 
-// Custom imports
-import BcryptHasher, { PasswordHasher }  from './bcrypt-password-service';
-import { USER_SERVICE } from '../keys';
-import
-    UserController,
-{
-    Credentials,
-    IUserModel,
-} from '../models/user';
+import { BcryptHasher } from '../services/bcrypt-hasher';
+import {
+    UserService,
+    PasswordHasher,
+} from '../types/services';
+import {
+    SignInCredentials,
+    UserProfile,
+    securityId,
+} from '../types/auth';
+import { USER_SERVICE } from '../constants';
+import { prisma, User } from '../../prisma/generated/prisma-client';
 
-import { UserProfile, securityId } from '../types/auth';
-
-export interface UserService {
-    verifyCredentials(credentials: Credentials): Promise<IUserModel>;
-    convertToUserProfile(user: IUserModel): UserProfile;
-}
-
-export default class DefaultUserService implements UserService {
+export class MyUserService implements UserService {
     constructor(
-        public bcryptHasher: PasswordHasher = new BcryptHasher(),
-    ) {}
+        protected bcryptHasher: PasswordHasher = new BcryptHasher(),
+    ) { }
 
-    async verifyCredentials(credentials: Credentials): Promise<IUserModel> {
+    async verifyCredentials(credentials: SignInCredentials): Promise<User> {
         const { email, password } = credentials;
 
-        const foundUser = await UserController.findOne({ email });
+        const foundUser = await prisma.user({ email });
 
         if (!foundUser) {
-            throw new HttpError.Unauthorized(USER_SERVICE.INVALID_CREDENTIALS_ERROR);
+            throw new HttpErrors.Unauthorized('User not found');
         }
 
-        const passwordMatched = await this.bcryptHasher.comparePassword(password, foundUser.password);
+        const passwordMatched = await this.bcryptHasher.comparePasswords(password, foundUser.password);
 
         if (!passwordMatched) {
-            throw new HttpError.Unauthorized(USER_SERVICE.INVALID_CREDENTIALS_ERROR);
+            throw new HttpErrors.Unauthorized('Incorrect password');
         }
 
         return foundUser;
     }
 
-    convertToUserProfile(user: IUserModel): UserProfile {
+    convertToUserProfile(user: User): UserProfile {
         return {
-            [securityId]: user.email,
-            name: user.userName,
+            [securityId]: user.id,
+            userName: user.userName || "",
+            email: user.email,
+            role: user.role,
         };
     }
 }
+
+export const userService = new MyUserService();

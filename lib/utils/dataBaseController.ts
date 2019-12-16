@@ -1,9 +1,9 @@
 import * as mongoose from 'mongoose';
-
 export namespace DataBaseController {
     export const connect = async (db_name: string) => {
         try {
-            await mongoose.connect(`mongodb://localhost:27017/${db_name}`, { useNewUrlParser: true, useUnifiedTopology: true });
+            const uri = `mongodb+srv://WithoutHands:Sasha080701@mycluster-qntjt.azure.mongodb.net/${db_name}?retryWrites=true&w=majority`;
+            await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         } catch (error) {
             throw error;
         }

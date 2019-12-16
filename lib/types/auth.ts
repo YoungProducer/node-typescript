@@ -1,4 +1,5 @@
-import { Request, NextFunction } from 'express';
+import { Request } from 'express';
+import { Role } from '../../prisma/generated/prisma-client';
 
 export declare const securityId: unique symbol;
 
@@ -7,17 +8,24 @@ export interface Principal {
     [attribute: string]: any;
 }
 
-export interface UserProfile extends Principal {
-    email?: string;
-    name?: string;
+export interface SignUpCredentials {
+    email: string;
+    password: string;
+    userName?: string;
 }
 
-export interface TokenService {
-    verifyToken(token: string): Promise<UserProfile>;
-    generateToken(userProfile: UserProfile): Promise<string>;
+export interface SignInCredentials {
+    email: string;
+    password: string;
+}
+
+export interface UserProfile extends Principal {
+    email: string;
+    userName: string;
+    role: Role;
 }
 
 export interface AuthStrategy {
-    authenticate(request: Request): Promise<UserProfile>;
+    authenticate(request: Request): Promise<UserProfile | undefined>;
     extractCredentials(request: Request): string;
 }

@@ -6,9 +6,12 @@
       "module": "commonjs",
       "sourceMap": true,
       "allowJs": true,
-      "lib": [ "es2015", "dom"],
+      "lib": [ "es2015", "dom", "esnext.asynciterable"],
       "experimentalDecorators": true,
-      "emitDecoratorMetadata": true
+      "emitDecoratorMetadata": true,
+      "paths": {
+        "lib/*": ["./lib"]
+      },
     },
     "exclude": [
       "/node_modules/",
@@ -19,4 +22,4 @@
       "./lib/**/*.test.ts",
       "./config/**/*.ts"
     ]
-  }
+}

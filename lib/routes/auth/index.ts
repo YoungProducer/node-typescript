@@ -1,62 +1,35 @@
-import * as express from 'express';
 import {
     Request,
     Response,
     NextFunction,
+    Router,
 } from 'express';
-import * as HttpErrors from 'http-errors';
 import * as _ from 'lodash';
+import * as HttpErrors from 'http-errors';
+
+// Prisma import
+import { prisma, User } from '../../../prisma/generated/prisma-client';
 
 // Custom imports
 import restfull from '../../utils/restfull';
-import
-    UserController,
-    {
-        IUserModel,
-        Credentials,
-    } from '../../models/user';
-import BcryptHasher, { PasswordHasher } from '../../services/bcrypt-password-service';
-import DefaultUserService, { UserService } from '../../services/user-service';
-import { JWTService } from '../../services/jwt-service';
+import {
+    SignUpCredentials,
+    SignInCredentials,
+    UserProfile,
+    securityId,
+} from '../../types/auth';
 import { validateCredentials } from '../../services/validator';
-import { JWTMiddleware } from '../../middleware/jwt-middleware';
+import { jwtAccessService } from '../../services/access-service';
+import { jwtRefreshService } from '../../services/refresh-service';
+import { bcryptHasher } from '../../services/bcrypt-hasher';
+import { userService } from '../../services/user-service';
+import { JWT_SERVICE } from '../../constants';
 
-// Import types
-import { TokenService, UserProfile } from '../../types/auth';
+import { jwtAccessMiddleware } from '../../middleware/jwtAccessMiddleware';
 
-const router: express.Router = express.Router();
+const router = Router();
 
-const routes = (
-    passwordHasher: PasswordHasher = new BcryptHasher(),
-    userService: UserService = new DefaultUserService(),
-    tokenService: TokenService = new JWTService(),
-) => (
-    router.all(
-        '/auth/signin',
-        restfull({
-            post: async (
-                req: Request,
-                res: Response,
-                next: NextFunction,
-            ) => {
-                const credentials: Credentials = req.body;
-
-                try {
-                    const user: IUserModel = await userService.verifyCredentials(credentials);
-
-                    const userProfile: UserProfile = userService.convertToUserProfile(user);
-
-                    const token = await tokenService.generateToken(userProfile);
-
-                    return res.send({
-                        accessToken: token,
-                    });
-                } catch (error) {
-                    next(error);
-                }
-            },
-        }),
-    ),
+const routes = () => (
     router.all(
         '/auth/signup',
         restfull({
@@ -65,17 +38,18 @@ const routes = (
                 res: Response,
                 next: NextFunction,
             ) => {
-                const credentials: IUserModel = req.body;
+                const credentials: SignUpCredentials = req.body;
 
                 try {
-                    validateCredentials(_.pick(credentials, ["email", "password"]));
+                    validateCredentials(_.pick(credentials, ['email', 'password']));
 
-                    credentials.password = await passwordHasher.hashPassword(credentials.password);
+                    credentials.password = await bcryptHasher.hashPassword(credentials.password);
 
-                    const savedUser = await UserController.create({
-                        userName: credentials.userName,
+                    const savedUser = await prisma.createUser({
                         email: credentials.email,
                         password: credentials.password,
+                        userName: credentials.userName,
+                        role: 'DEFAULT_USER',
                     });
 
                     return res.send(savedUser)
@@ -96,27 +70,70 @@ const routes = (
         }),
     ),
     router.all(
-        '/protected',
-        JWTMiddleware,
-        // csrfProtection,
+        '/auth/signin',
         restfull({
-            get: async (req: Request, res: Response, next: NextFunction) => {
-                return res.send(req.csrfToken());
+            post: async (
+                req: Request,
+                res: Response,
+                next: NextFunction,
+            ) => {
+                const credentials: SignInCredentials = req.body;
+
+                try {
+                    // Verify user's credentials
+                    const user: User = await userService.verifyCredentials(credentials);
+
+                    // Create user profile
+                    const userProfile: UserProfile = userService.convertToUserProfile(user);
+
+                    // Generate new access token
+                    const accessToken = await jwtAccessService.generateToken(userProfile);
+                    // Generate new refresh token
+                    const refreshToken = await jwtRefreshService.generateToken(userProfile);
+
+                    const timezoneOffset = new Date().getTimezoneOffset();
+                    const accessTokenExpirationDate = new Date(Date.now() + (timezoneOffset * -1 * 60 * 1000) + (Number(JWT_SERVICE.JWT_EXPIRES_IN)));
+                    const refreshTokenExpirationDate = new Date(Date.now() + (timezoneOffset * -1 * 60 * 1000) + (Number(JWT_SERVICE.REFRESH_EXPIRES_IN)));
+
+                    res.cookie('accessToken', `Bearer ${accessToken}`, {
+                        httpOnly: true,
+                        // secure: // Uncomment in production mode,
+                        expires: accessTokenExpirationDate,
+                        // domain: 'http://localhost:8080',
+                        path: '/',
+                    });
+
+                    res.cookie('refreshToken', refreshToken, {
+                        httpOnly: true,
+                        // secure: // Uncomment in production mode,
+                        expires: refreshTokenExpirationDate,
+                        // domain: 'http://localhost:8080',
+                        path: '/',
+                    });
+
+                    return res.send({
+                        ...userProfile,
+                    }).end();
+                } catch (error) {
+                    return next(error);
+                }
+            },
+        }),
+    ),
+    router.all(
+        '/auth/me',
+        jwtAccessMiddleware,
+        restfull({
+            get: async(
+                req: Request,
+                res: Response,
+                next: NextFunction,
+            ) => {
+                const userProfile: UserProfile = req.body;
+                return res.send(userProfile).end();
             },
         }),
     )
-    // router.post(
-    //     '/auth/protected',
-    //     csrfProtection,
-    //     JWTMiddleware,
-    //     async (
-    //         req: Request,
-    //         res: Response,
-    //         next: NextFunction,
-    //     ) => {
-    //         return res.send(req.csrfToken());
-    //     },
-    // )
 );
 
 export default routes();
