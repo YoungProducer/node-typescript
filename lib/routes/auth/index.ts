@@ -26,6 +26,7 @@ import { userService } from '../../services/user-service';
 import { JWT_SERVICE } from '../../constants';
 
 import { jwtAccessMiddleware } from '../../middleware/jwtAccessMiddleware';
+import { jwtRefreshMiddleware } from '../../middleware/jwtRefreshMiddleware';
 
 const router = Router();
 
@@ -131,6 +132,36 @@ const routes = () => (
             ) => {
                 const userProfile: UserProfile = req.body;
                 return res.send(userProfile).end();
+            },
+        }),
+    ),
+    router.all(
+        '/auth/refresh',
+        jwtRefreshMiddleware,
+        restfull({
+            post: async(
+                req: Request,
+                res: Response,
+                next: NextFunction,
+            ) => {
+                try {
+                    const userProfile: UserProfile = req.body;
+
+                    const refreshToken: string = await jwtRefreshService.generateToken(userProfile);
+
+                    const timezoneOffset = new Date().getTimezoneOffset();
+                    const refreshTokenExpirationDate = new Date(Date.now() + (timezoneOffset * -1 * 60 * 1000) + (Number(JWT_SERVICE.REFRESH_EXPIRES_IN)));
+
+                    res.cookie('refreshToken', refreshToken, {
+                        httpOnly: true,
+                        // secure: // Uncommemt in production mode.
+                        expires: refreshTokenExpirationDate,
+                    });
+
+                    return res.send(userProfile).end();
+                } catch (error) {
+                    next(error);
+                }
             },
         }),
     )

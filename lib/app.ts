@@ -63,10 +63,6 @@ app.use((
     handleError(err, res);
 });
 
-app.get('/', (req: Request, res: Response, next: NextFunction) => {
-    res.send('1').end();
-});
-
 // Enable Helmet
 app.use(helmet({
     xssFilter: true,
