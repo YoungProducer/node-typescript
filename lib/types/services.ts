@@ -19,6 +19,11 @@ export interface RefreshTokenService {
     generateToken(userProfile: UserProfile): Promise<string>;
 }
 
+export interface LogoutService {
+    logout(loginId: string): Promise<boolean>;
+    logoutAll(userId: string): Promise<boolean>;
+}
+
 export interface UserService {
     verifyCredentials(credentials: SignInCredentials): Promise<User>;
     convertToUserProfile(user: User): UserProfile;

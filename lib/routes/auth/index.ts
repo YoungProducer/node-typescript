@@ -18,11 +18,15 @@ import {
     UserProfile,
     securityId,
 } from '../../types/auth';
+
+// Import services
 import { validateCredentials } from '../../services/validator';
 import { jwtAccessService } from '../../services/access-service';
 import { jwtRefreshService } from '../../services/refresh-service';
 import { bcryptHasher } from '../../services/bcrypt-hasher';
 import { userService } from '../../services/user-service';
+import { userLogoutService } from '../../services/logout-service';
+
 import { JWT_SERVICE } from '../../constants';
 
 import { jwtAccessMiddleware } from '../../middleware/jwtAccessMiddleware';
@@ -114,6 +118,7 @@ const routes = () => (
 
                     return res.send({
                         ...userProfile,
+                        id: userProfile[securityId],
                     }).end();
                 } catch (error) {
                     return next(error);
@@ -131,7 +136,7 @@ const routes = () => (
                 next: NextFunction,
             ) => {
                 const userProfile: UserProfile = req.body;
-                return res.send(userProfile).end();
+                return res.send({ ...userProfile }).end();
             },
         }),
     ),
@@ -145,20 +150,81 @@ const routes = () => (
                 next: NextFunction,
             ) => {
                 try {
-                    const userProfile: UserProfile = req.body;
+                    const userProfile: UserProfile = req.body.userProfile;
 
+                    // Generate new access token
+                    const accessToken = await jwtAccessService.generateToken(userProfile);
+                    // Generate new refresh token
                     const refreshToken: string = await jwtRefreshService.generateToken(userProfile);
 
+                    // Calculate expiration date
                     const timezoneOffset = new Date().getTimezoneOffset();
+                    const accessTokenExpirationDate = new Date(Date.now() + (timezoneOffset * -1 * 60 * 1000) + (Number(JWT_SERVICE.JWT_EXPIRES_IN)));
                     const refreshTokenExpirationDate = new Date(Date.now() + (timezoneOffset * -1 * 60 * 1000) + (Number(JWT_SERVICE.REFRESH_EXPIRES_IN)));
+
+                    res.cookie('accessToken', `Bearer ${accessToken}`, {
+                        httpOnly: true,
+                        // secure: // Uncomment in production mode,
+                        expires: accessTokenExpirationDate,
+                        path: '/',
+                    });
 
                     res.cookie('refreshToken', refreshToken, {
                         httpOnly: true,
                         // secure: // Uncommemt in production mode.
                         expires: refreshTokenExpirationDate,
+                        path: '/',
                     });
 
                     return res.send(userProfile).end();
+                } catch (error) {
+                    next(error);
+                }
+            },
+        }),
+    ),
+    router.all(
+        '/auth/logout',
+        jwtRefreshMiddleware,
+        restfull({
+            post: async(
+                req: Request,
+                res: Response,
+                next: NextFunction,
+            ) => {
+                const loginId: string = req.body.userProfile.hash;
+
+                try {
+                    const isLoggedOut: boolean = await userLogoutService.logout(loginId);
+
+                    res.clearCookie('accessToken', { path: '/' });
+                    res.clearCookie('refreshToken', { path: '/' });
+
+                    return res.send({ isLoggedOut }).end();
+                } catch (error) {
+                    next(error);
+                }
+            },
+        }),
+    ),
+    router.all(
+        '/auth/logoutall',
+        jwtRefreshMiddleware,
+        restfull({
+            post: async(
+                req: Request,
+                res: Response,
+                next: NextFunction,
+            ) => {
+                const userId: string = req.body.userProfile.id;
+
+                try {
+                    const isLoggedOut: boolean = await userLogoutService.logoutAll(userId);
+
+                    res.clearCookie('accessToken', { path: '/' });
+                    res.clearCookie('refreshToken', { path: '/' });
+
+                    return res.send({ isLoggedOut }).end();
                 } catch (error) {
                     next(error);
                 }
