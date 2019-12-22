@@ -135,7 +135,7 @@ const routes = () => (
                 res: Response,
                 next: NextFunction,
             ) => {
-                const userProfile: UserProfile = req.body;
+                const userProfile: UserProfile = req.body.userProfile;
                 return res.send({ ...userProfile }).end();
             },
         }),
