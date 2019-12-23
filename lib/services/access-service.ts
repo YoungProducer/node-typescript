@@ -78,4 +78,4 @@ export class JWTAccessService implements AccessTokenService {
     }
 }
 
-export const jwtAccessService = new JWTAccessService();
+export default new JWTAccessService();

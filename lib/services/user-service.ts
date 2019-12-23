@@ -4,6 +4,7 @@ import { BcryptHasher } from '../services/bcrypt-hasher';
 import {
     UserService,
     PasswordHasher,
+    UserUpdateFields,
 } from '../types/services';
 import {
     SignInCredentials,
@@ -44,6 +45,60 @@ export class MyUserService implements UserService {
             role: user.role,
         };
     }
+
+    async updateUserData(id: string, fields: UserUpdateFields): Promise<UserProfile> {
+        if (fields.email) {
+            const foundUser = await prisma.user({ email: fields.email });
+
+            if (foundUser) {
+                throw new HttpErrors.Conflict('Email already in use!');
+            }
+        }
+
+        if (fields.userName) {
+            const foundUser = await prisma.user({ userName: fields.userName });
+
+            if (foundUser) {
+                throw new HttpErrors.Conflict('UserName already in use!');
+            }
+        }
+
+        if (fields.password) {
+            if (!fields.previousPassword) {
+                throw new HttpErrors.Conflict('Missing previous password');
+            }
+
+            const foundUser = await prisma.user({ id });
+
+            if (!await this.bcryptHasher.comparePasswords(fields.previousPassword, foundUser.password)) {
+                throw new HttpErrors.Conflict('Inccorect previous password');
+            }
+
+            delete fields.previousPassword;
+        }
+        if (!fields.email) {
+            delete fields.email;
+        }
+        if (!fields.userName) {
+            delete fields.userName;
+        }
+        if (!fields.password) {
+            delete fields.password;
+        }
+        if (!fields.previousPassword) {
+            delete fields.previousPassword;
+        }
+
+        // Update user and get updated user record
+        const user: User = await prisma.updateUser({ data: fields, where: { id } });
+
+        console.log(user);
+
+        // Conver to user profile
+        const userProfile: UserProfile = this.convertToUserProfile(user);
+        console.log(userProfile);
+        return userProfile;
+    }
 }
 
-export const userService = new MyUserService();
+export default new MyUserService();

@@ -21,13 +21,10 @@ import {
 
 // Import services
 import { validateCredentials } from '../../services/validator';
-import { jwtAccessService } from '../../services/access-service';
-import { jwtRefreshService } from '../../services/refresh-service';
-import { bcryptHasher } from '../../services/bcrypt-hasher';
-import { userService } from '../../services/user-service';
-import { userLogoutService } from '../../services/logout-service';
-
-import { JWT_SERVICE } from '../../constants';
+import bcryptHasher from '../../services/bcrypt-hasher';
+import userService from '../../services/user-service';
+import userLogoutService from '../../services/logout-service';
+import userJWTCookiesService from '../../services/jwt-cookies-service';
 
 import { jwtAccessMiddleware } from '../../middleware/jwtAccessMiddleware';
 import { jwtRefreshMiddleware } from '../../middleware/jwtRefreshMiddleware';
@@ -91,30 +88,10 @@ const routes = () => (
                     // Create user profile
                     const userProfile: UserProfile = userService.convertToUserProfile(user);
 
-                    // Generate new access token
-                    const accessToken = await jwtAccessService.generateToken(userProfile);
-                    // Generate new refresh token
-                    const refreshToken = await jwtRefreshService.generateToken(userProfile);
-
-                    const timezoneOffset = new Date().getTimezoneOffset();
-                    const accessTokenExpirationDate = new Date(Date.now() + (timezoneOffset * -1 * 60 * 1000) + (Number(JWT_SERVICE.JWT_EXPIRES_IN)));
-                    const refreshTokenExpirationDate = new Date(Date.now() + (timezoneOffset * -1 * 60 * 1000) + (Number(JWT_SERVICE.REFRESH_EXPIRES_IN)));
-
-                    res.cookie('accessToken', `Bearer ${accessToken}`, {
-                        httpOnly: true,
-                        // secure: // Uncomment in production mode,
-                        expires: accessTokenExpirationDate,
-                        // domain: 'http://localhost:8080',
-                        path: '/',
-                    });
-
-                    res.cookie('refreshToken', refreshToken, {
-                        httpOnly: true,
-                        // secure: // Uncomment in production mode,
-                        expires: refreshTokenExpirationDate,
-                        // domain: 'http://localhost:8080',
-                        path: '/',
-                    });
+                    // Generate access token and set it to cookies
+                    await userJWTCookiesService.pushAccessTokenToClient(userProfile, res);
+                    // Generate refresh token and set it to cookies
+                    await userJWTCookiesService.pushRefreshTokenToClient(userProfile, res);
 
                     return res.send({
                         ...userProfile,
@@ -152,29 +129,10 @@ const routes = () => (
                 try {
                     const userProfile: UserProfile = req.body.userProfile;
 
-                    // Generate new access token
-                    const accessToken = await jwtAccessService.generateToken(userProfile);
-                    // Generate new refresh token
-                    const refreshToken: string = await jwtRefreshService.generateToken(userProfile);
-
-                    // Calculate expiration date
-                    const timezoneOffset = new Date().getTimezoneOffset();
-                    const accessTokenExpirationDate = new Date(Date.now() + (timezoneOffset * -1 * 60 * 1000) + (Number(JWT_SERVICE.JWT_EXPIRES_IN)));
-                    const refreshTokenExpirationDate = new Date(Date.now() + (timezoneOffset * -1 * 60 * 1000) + (Number(JWT_SERVICE.REFRESH_EXPIRES_IN)));
-
-                    res.cookie('accessToken', `Bearer ${accessToken}`, {
-                        httpOnly: true,
-                        // secure: // Uncomment in production mode,
-                        expires: accessTokenExpirationDate,
-                        path: '/',
-                    });
-
-                    res.cookie('refreshToken', refreshToken, {
-                        httpOnly: true,
-                        // secure: // Uncommemt in production mode.
-                        expires: refreshTokenExpirationDate,
-                        path: '/',
-                    });
+                    // Generate access token and set it to cookies
+                    await userJWTCookiesService.pushAccessTokenToClient(userProfile, res);
+                    // Generate refresh token and set it to cookies
+                    await userJWTCookiesService.pushRefreshTokenToClient(userProfile, res);
 
                     return res.send(userProfile).end();
                 } catch (error) {

@@ -4,6 +4,7 @@ import {
 import { HttpError } from 'http-errors';
 
 export const handleError = (err: HttpError, res: Response) => {
+    console.log(err);
     const { statusCode, message } = err;
 
     res.status(statusCode).json({

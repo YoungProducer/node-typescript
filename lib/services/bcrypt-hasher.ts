@@ -19,4 +19,4 @@ export class BcryptHasher implements PasswordHasher {
     }
 }
 
-export const bcryptHasher = new BcryptHasher();
+export default new BcryptHasher();

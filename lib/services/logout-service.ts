@@ -26,4 +26,4 @@ export class UserLogoutService implements LogoutService {
     }
 }
 
-export const userLogoutService =  new UserLogoutService();
+export default new UserLogoutService();

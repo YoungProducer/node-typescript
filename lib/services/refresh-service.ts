@@ -93,7 +93,7 @@ export class JWTRefreshService implements RefreshTokenService {
             }
 
             // Create record in database
-            const refreshToken = await prisma.createToken({
+            await prisma.createToken({
                 token,
                 loginId: userInfoForToken.hash,
                 user: {
@@ -110,4 +110,4 @@ export class JWTRefreshService implements RefreshTokenService {
     }
 }
 
-export const jwtRefreshService = new JWTRefreshService();
+export default new JWTRefreshService();

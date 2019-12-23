@@ -7,7 +7,7 @@ import {
     AuthStrategy,
     UserProfile,
 } from '../types/auth';
-import { jwtAccessService } from '../services/access-service';
+import jwtAccessService from '../services/access-service';
 
 export class JWTAuth implements AuthStrategy {
     async authenticate(request: Request): Promise<UserProfile | undefined> {

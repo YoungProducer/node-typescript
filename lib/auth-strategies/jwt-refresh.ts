@@ -7,7 +7,7 @@ import {
     AuthStrategy,
     UserProfile,
 } from '../types/auth';
-import { jwtRefreshService } from '../services/refresh-service';
+import jwtRefreshService from '../services/refresh-service';
 
 export class JWTRefresh implements AuthStrategy {
     async authenticate(request: Request): Promise<UserProfile | undefined> {
