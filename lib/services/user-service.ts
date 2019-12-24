@@ -1,4 +1,5 @@
 import * as HttpErrors from 'http-errors';
+import * as isemail from 'isemail';
 
 import { BcryptHasher } from '../services/bcrypt-hasher';
 import {
@@ -11,7 +12,6 @@ import {
     UserProfile,
     securityId,
 } from '../types/auth';
-import { USER_SERVICE } from '../constants';
 import { prisma, User } from '../../prisma/generated/prisma-client';
 
 export class MyUserService implements UserService {
@@ -48,6 +48,10 @@ export class MyUserService implements UserService {
 
     async updateUserData(id: string, fields: UserUpdateFields): Promise<UserProfile> {
         if (fields.email) {
+            if (!isemail.validate(fields.email)) {
+                throw new HttpErrors.BadRequest('Email pattern is invalid!');
+            }
+
             const foundUser = await prisma.user({ email: fields.email });
 
             if (foundUser) {
@@ -64,6 +68,10 @@ export class MyUserService implements UserService {
         }
 
         if (fields.password) {
+            if (fields.password.length < 8) {
+                throw new HttpErrors.BadRequest('Too short password!');
+            }
+
             if (!fields.previousPassword) {
                 throw new HttpErrors.Conflict('Missing previous password');
             }
@@ -73,6 +81,8 @@ export class MyUserService implements UserService {
             if (!await this.bcryptHasher.comparePasswords(fields.previousPassword, foundUser.password)) {
                 throw new HttpErrors.Conflict('Inccorect previous password');
             }
+
+            fields.password = await this.bcryptHasher.hashPassword(fields.password);
 
             delete fields.previousPassword;
         }
