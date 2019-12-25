@@ -8,7 +8,7 @@ import * as _ from 'lodash';
 import * as HttpErrors from 'http-errors';
 
 // Prisma import
-import { prisma, User } from '../../../prisma/generated/prisma-client';
+import { prisma, User, Role } from '../../../prisma/generated/prisma-client';
 
 // Custom imports
 import restfull from '../../utils/restfull';
@@ -18,14 +18,15 @@ import {
     UserProfile,
     securityId,
 } from '../../types/auth';
+import { UserUpdateFields } from '../../types/services';
 
 // Services
 import userService from '../../services/user-service';
 import userJWTCookiesService from '../../services/jwt-cookies-service';
+import adminService from '../../services/admin-service';
 
 // Middlewares
 import { jwtRefreshMiddleware } from '../../middleware/jwtRefreshMiddleware';
-import { UserUpdateFields } from '../../types/services';
 import { jwtAccessMiddleware } from '../../middleware/jwtAccessMiddleware';
 
 const router: Router = Router();
@@ -50,9 +51,39 @@ const routes = () => (
                     const newUserProfile: UserProfile = await userService.updateUserData(userProfile[securityId], fields);
 
                     await userJWTCookiesService.pushAccessTokenToClient(newUserProfile, res);
-                    // await userJWTCookiesService.pushRefreshTokenToClient(newUserProfile, res);
+                    await userJWTCookiesService.pushRefreshTokenToClient(newUserProfile, res);
 
                     return res.send({ ...newUserProfile, id: newUserProfile[securityId] }).end();
+                } catch (error) {
+                    next(error);
+                }
+            },
+        }),
+    ),
+    router.all(
+        '/update/user/root',
+        jwtAccessMiddleware,
+        restfull({
+            patch: async (
+                req: Request,
+                res: Response,
+                next: NextFunction,
+            ) => {
+                const userProfile: UserProfile = req.body.userProfile;
+
+                const newRole: Role = req.body.newRole;
+                const userId: string = req.body.userId;
+
+                const role: Role = userProfile.role;
+
+                try {
+                    if (role !== 'ADMIN') {
+                        throw new HttpErrors.Unauthorized('Invalid roots.');
+                    }
+
+                    await adminService.setRootsToUser(userId, newRole);
+
+                    return res.send('Success').end();
                 } catch (error) {
                     next(error);
                 }

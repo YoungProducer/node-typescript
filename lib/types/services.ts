@@ -4,7 +4,7 @@ import {
     UserProfile,
     SignInCredentials,
 } from './auth';
-import { User } from '../../prisma/generated/prisma-client';
+import { User, Role } from '../../prisma/generated/prisma-client';
 
 export interface UserUpdateFields {
     email?: string;
@@ -42,4 +42,8 @@ export interface UserService {
 export interface JWTCookiesService {
     pushAccessTokenToClient(userProfile: UserProfile, res: Response): Promise<void>;
     pushRefreshTokenToClient(userProfile: UserProfile, res: Response): Promise<void>;
+}
+
+export interface AdminOnlyService {
+    setRootsToUser(userId: string, role: Role): Promise<boolean>;
 }
