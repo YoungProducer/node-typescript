@@ -61,7 +61,7 @@ const routes = () => (
         }),
     ),
     router.all(
-        '/update/user/root',
+        '/update/user/roots',
         jwtAccessMiddleware,
         restfull({
             patch: async (
@@ -71,8 +71,8 @@ const routes = () => (
             ) => {
                 const userProfile: UserProfile = req.body.userProfile;
 
-                const newRole: Role = req.body.newRole;
-                const userId: string = req.body.userId;
+                const newRole: Role = req.body.data.newRole;
+                const userId: string = req.body.data.userId;
 
                 const role: Role = userProfile.role;
 

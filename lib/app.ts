@@ -23,7 +23,7 @@ const { PORT = 4000 } = process.env;
 // Set up CORS policy
 const corsOptions = {
     origin: 'http://localhost:8080',
-    methods: ["POST"],
+    methods: ["POST", "PATCH"],
     credentials: true,
     maxAge: 3600,
 };
